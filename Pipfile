@@ -18,6 +18,10 @@ matplotlib = "*"
 numpy = "*"
 scipy = "*"
 scikit-learn = "*"
+jupyter = "*"
+spotipy = "*"
+pylyrics = "*"
+requests = "*"
 
 
 [requires]
