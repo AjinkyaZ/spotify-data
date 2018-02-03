@@ -14,7 +14,11 @@ class Dataset:
         client_cred = SpotifyClientCredentials(client_id=client_id,
                                                       client_secret=client_secret)
         self.sp = spotipy.Spotify(client_credentials_manager=client_cred)
-        self.data_dict = {'__disclaimer': "I do not own any of the data included here, and intend to use this for academic purposes only.", 'tracks': {}, 'users':{}}
+        self.data_dict = {'__disclaimer': "I do not own any of the data included here, and intend to use this for academic purposes only.", 
+                          'tracks':  {}, 
+                          'users':   {},
+                          'albums':  {}
+                          }
 
     def size(self):
         return len(self.data_dict['tracks'])
@@ -57,20 +61,21 @@ class Dataset:
             self.data_dict['users'][user_id].append(track_id)
         else:
             self.data_dict['users'][user_id] = [track_id]
+        artist_id = track_obj['artists'][0]['id']
+        artist = track_obj['artists'][0]['name']
+        if len(artist)==0: 
+            return
 
-        if track_id in self.data_dict:
+        if track_id in self.data_dict['tracks']:
+            print("track info already present:", track_name, ":", artist)
             return
         else:
-            artist_id = track_obj['artists'][0]['id']
-            artist = track_obj['artists'][0]['name']
-            if len(artist)==0: 
-                return
             # pprint(track_audio_feats)
             # track_audio_analysis = self.sp.audio_analysis(track_id) # too slow
             # pprint(track_audio_analysis)
             if len(track_name) == 0: 
                 return
-            track_data = get_feats(artist, track_obj)
+            track_data = self.get_feats(artist, track_obj)
             track_data['artist_id'] = artist_id
             self.data_dict['tracks'][track_id] = track_data
         
@@ -83,7 +88,12 @@ class Dataset:
         track_audio_feats = self.sp.audio_features(track_id)[0]
         track_popularity = track['popularity']
         album_id = track['album']['id']
-        album_info = sp.album(album_id)
+        if album_id in self.data_dict['albums']:
+            print("Album info already present: ", album_name, "-", artist)
+            album_info = self.data_dict['albums'][album_id]
+        else:
+            album_info = self.sp.album(album_id)
+            self.data_dict['albums'][album_id] = album_info
         release_year = album_info['release_date'][:4]
         genres = album_info['genres']
         album_popularity = album_info['popularity']
@@ -123,12 +133,12 @@ def main():
     dataset = Dataset(client_id, client_secret)
     # dataset.load_data('../data/spotify_data.json')
     tic = time()
-    for user in ['rfsdr1ffkv97dj1qz0esavzzu', 'ajinkyaz']:
+    for user in ['ajinkyaz']:
         dataset.fetch_user_data(user)
     print('Took ', time()-tic, 'seconds')
     print('Total tracks --', dataset.size())
     print('Total users --', dataset.num_users())
-
+    dataset.save_data('../data/spotify_data.json')
 
 if __name__ == "__main__":
     main()
