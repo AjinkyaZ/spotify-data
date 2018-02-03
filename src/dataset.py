@@ -16,6 +16,40 @@ class Dataset:
         self.sp = spotipy.Spotify(client_credentials_manager=client_cred)
         self.data_dict = {'__disclaimer': "I do not own any of the data included here, and intend to use this for academic purposes only.", 'tracks': {}, 'users':{}}
 
+    def size(self):
+        return len(self.data_dict['tracks'])
+    
+    def num_users(self):
+        return len(self.data_dict['users'])
+                        
+    def load_data(self, data_filepath):
+        with open(data_filepath, 'r') as f:
+            self.data_dict = json.load(f)
+
+    def save_data(self, data_filepath):
+        with open(data_filepath, 'w') as f:
+            json.dump(self.data_dict, f)
+
+    def fetch_user_data(self, user_id):
+        user_playlists = self.sp.user_playlists(user_id)
+
+        for playlist in user_playlists['items']:
+            if playlist['owner']['id'] == user_id:
+                print(playlist['name'], end='')
+                print(' -- ', playlist['tracks']['total'])
+                results = self.sp.user_playlist(user_id, playlist['id'], fields='tracks,next')
+                tracks = results['tracks']
+                for i, item in enumerate(tracks['items']):
+                    track = item['track']
+                    # pprint(track)
+                    self.add_data(user_id, track)
+                while tracks['next']:
+                    tracks = self.sp.next(tracks)
+                    for i, item in enumerate(tracks['items']):
+                        track = item['track']
+                        # pprint(track)
+                        self.add_data(user_id, track)
+
     def add_data(self, user_id, track_obj):
         track_name = track_obj['name']
         track_id = track_obj['id']
@@ -39,37 +73,7 @@ class Dataset:
             track_data = get_feats(artist, track_obj)
             track_data['artist_id'] = artist_id
             self.data_dict['tracks'][track_id] = track_data
-    
-    def size(self):
-        return len(self.data_dict['tracks'])
-    
-    def num_users(self):
-        return len(self.data_dict['users'])
-    
-    def fetch_user_data(self, user_id):
-        user_playlists = self.sp.user_playlists(user_id)
-
-        for playlist in user_playlists['items']:
-            if playlist['owner']['id'] == user_id:
-                print(playlist['name'], end='')
-                print(' -- ', playlist['tracks']['total'])
-                results = self.sp.user_playlist(user_id, playlist['id'], fields='tracks,next')
-                tracks = results['tracks']
-                for i, item in enumerate(tracks['items']):
-                    track = item['track']
-                    # pprint(track)
-                    self.add_data(user_id, track)
-                while tracks['next']:
-                    tracks = self.sp.next(tracks)
-                    for i, item in enumerate(tracks['items']):
-                        track = item['track']
-                        # pprint(track)
-                        self.add_data(user_id, track)
-                        
-    def load_data(self, data_filepath):
-        with open(data_filepath, 'r') as f:
-            self.data_dict = json.load(f)
-    
+        
     def get_feats(self, artist, track):
         track_id = track['id']
         track_name = track['name'].strip()
@@ -109,9 +113,6 @@ class Dataset:
                       'audio_feats': track_audio_feats}
         return track_data    
 
-    def save_data(self, data_filepath):
-        with open(data_filepath, 'w') as f:
-            json.dump(self.data_dict, f)
 
 def main():
     with open('../data/creds.json', 'r') as f:
