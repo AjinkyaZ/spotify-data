@@ -84,7 +84,6 @@ class Dataset:
         track_name = track['name'].strip()
         album_name = track['album']['name'].strip()
         track_duration = track['duration_ms']/1000
-        track_album_art_url = [i['url'] for i in track['album']['images']][0]
         track_audio_feats = self.sp.audio_features(track_id)[0]
         track_popularity = track['popularity']
         album_id = track['album']['id']
@@ -92,11 +91,15 @@ class Dataset:
             print("Album info already present: ", album_name, "-", artist)
             album_info = self.data_dict['albums'][album_id]
         else:
-            album_info = self.sp.album(album_id)
+            album_data = self.sp.album(album_id)
+            album_info = {'name': album_name,
+                          'release_year': album_data['release_date'][:4],
+                          'popularity': album_data['popularity'],
+                          'album_art': [i['url'] for i in track['album']['images']][0],
+                          'genres': album_data['genres']}
             self.data_dict['albums'][album_id] = album_info
-        release_year = album_info['release_date'][:4]
+        release_year = album_info['release_year']
         genres = album_info['genres']
-        album_popularity = album_info['popularity']
         
         for i in ['uri', 'id', 'analysis_url', 'track_href', 'type', 'duration_ms']:
             del track_audio_feats[i]
@@ -113,8 +116,6 @@ class Dataset:
                       'artist': artist,
                       'album': album_name,
                       'album_id': album_id,
-                      'album_popularity': album_popularity,
-                      'images': track_album_art_url,
                       'popularity': track_popularity,
                       'release_year': release_year,
                       'genres': genres,
