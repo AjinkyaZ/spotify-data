@@ -53,8 +53,8 @@ class Dataset:
                         track = item['track']
                         # pprint(track)
                         self.add_data(user_id, track)
-        user_tracks = self.data_dict[user_id]['tracks']
-        self.data_dict[user_id]['tracks'] = list(set(user_tracks))
+        user_tracks = self.data_dict['users'][user_id]
+        self.data_dict['users'][user_id] = list(set(user_tracks))
 
     def add_data(self, user_id, track_obj):
         track_name = track_obj['name']
@@ -68,7 +68,7 @@ class Dataset:
         if len(artist)==0: 
             return
         if track_id in self.data_dict['tracks']:
-            print("track info already present:", track_name, ":", artist)
+            # print("track info already present:", track_name, ":", artist)
             return
         else:
             # pprint(track_audio_feats)
@@ -90,7 +90,7 @@ class Dataset:
         track_popularity = track['popularity']
         album_id = track['album']['id']
         if album_id in self.data_dict['albums']:
-            print("Album info already present: ", album_name, "-", artist)
+            # print("Album info already present: ", album_name, "-", artist)
             album_info = self.data_dict['albums'][album_id]
         else:
             album_data = self.sp.album(album_id)
