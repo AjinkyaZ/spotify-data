@@ -34,7 +34,7 @@ class Dataset:
         with open(data_filepath, 'w') as f:
             json.dump(self.data_dict, f)
 
-    def fetch_user_data(self, user_id):
+    def fetch_user_data(self, user_id, get_artist_tracks=False):
         user_playlists = self.sp.user_playlists(user_id)
 
         for playlist in user_playlists['items']:
@@ -53,6 +53,8 @@ class Dataset:
                         track = item['track']
                         # pprint(track)
                         self.add_data(user_id, track)
+        user_tracks = self.data_dict[user_id]['tracks']
+        self.data_dict[user_id]['tracks'] = list(set(user_tracks))
 
     def add_data(self, user_id, track_obj):
         track_name = track_obj['name']
@@ -65,7 +67,6 @@ class Dataset:
         artist = track_obj['artists'][0]['name']
         if len(artist)==0: 
             return
-
         if track_id in self.data_dict['tracks']:
             print("track info already present:", track_name, ":", artist)
             return
@@ -82,6 +83,7 @@ class Dataset:
     def get_feats(self, artist, track):
         track_id = track['id']
         track_name = track['name'].strip()
+        artist_id = track['artists'][0]['id']
         album_name = track['album']['name'].strip()
         track_duration = track['duration_ms']/1000
         track_audio_feats = self.sp.audio_features(track_id)[0]
@@ -96,7 +98,9 @@ class Dataset:
                           'release_year': album_data['release_date'][:4],
                           'popularity': album_data['popularity'],
                           'album_art': [i['url'] for i in track['album']['images']][0],
-                          'genres': album_data['genres']}
+                          'genres': album_data['genres'],
+                          'artist': artist,
+                          'artist_id': artist_id}
             self.data_dict['albums'][album_id] = album_info
         release_year = album_info['release_year']
         genres = album_info['genres']
@@ -122,7 +126,7 @@ class Dataset:
                       'duration': track_duration, 
                       'lyrics': track_lyrics, 
                       'audio_feats': track_audio_feats}
-        return track_data    
+        return track_data
 
 
 def main():
