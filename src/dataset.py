@@ -15,9 +15,10 @@ class Dataset:
                                                       client_secret=client_secret)
         self.sp = spotipy.Spotify(client_credentials_manager=client_cred)
         self.data_dict = {'__disclaimer': "I do not own any of the data included here, and intend to use this for academic purposes only.", 
-                          'tracks':  {}, 
+                          'tracks':  {},
                           'users':   {},
-                          'albums':  {}
+                          'albums':  {},
+                          'artists': {}
                           }
 
     def size(self):
@@ -36,7 +37,6 @@ class Dataset:
 
     def fetch_user_data(self, user_id, get_artist_tracks=False):
         user_playlists = self.sp.user_playlists(user_id)
-
         for playlist in user_playlists['items']:
             if playlist['owner']['id'] == user_id:
                 print(playlist['name'], end='')
@@ -53,31 +53,40 @@ class Dataset:
                         track = item['track']
                         # pprint(track)
                         self.add_data(user_id, track)
-        user_tracks = self.data_dict['users'][user_id]
-        self.data_dict['users'][user_id] = list(set(user_tracks))
+        user_tracks = self.data_dict['users'][user_id]['tracks']
+        self.data_dict['users'][user_id]['tracks'] = list(set(user_tracks))
 
     def add_data(self, user_id, track_obj):
         track_name = track_obj['name']
         track_id = track_obj['id']
         if user_id in self.data_dict['users']:
-            self.data_dict['users'][user_id].append(track_id)
+            self.data_dict['users'][user_id]['tracks'].append(track_id)
         else:
-            self.data_dict['users'][user_id] = [track_id]
+            self.data_dict['users'][user_id] = {'tracks' : [track_id], 'artists':{}}
         artist_id = track_obj['artists'][0]['id']
         artist = track_obj['artists'][0]['name']
         if len(artist)==0: 
             return
+        if artist_id in self.data_dict['artists']:
+            pass
+        else:
+            self.data_dict['artists'][artist_id] = artist
+                                                    
         if track_id in self.data_dict['tracks']:
             # print("track info already present:", track_name, ":", artist)
             return
         else:
-            # pprint(track_audio_feats)
-            # track_audio_analysis = self.sp.audio_analysis(track_id) # too slow
-            # pprint(track_audio_analysis)
             if len(track_name) == 0: 
                 return
             track_data = self.get_feats(artist, track_obj)
             track_data['artist_id'] = artist_id
+            
+            # update artist info only for new tracks 
+            if artist_id in self.data_dict['users'][user_id]['artists']:
+                self.data_dict['users'][user_id]['artists'][artist_id] += 1
+            else:
+                self.data_dict['users'][user_id]['artists'][artist_id] = 1
+
             self.data_dict['tracks'][track_id] = track_data
         
     def get_feats(self, artist, track):
@@ -96,7 +105,7 @@ class Dataset:
             album_data = self.sp.album(album_id)
             album_info = {'name': album_name,
                           'release_year': album_data['release_date'][:4],
-                          'popularity': album_data['popularity'],
+                          'popularity': album_data['popularity']/100,
                           'album_art': [i['url'] for i in track['album']['images']][0],
                           'genres': album_data['genres'],
                           'artist': artist,
@@ -120,12 +129,14 @@ class Dataset:
                       'artist': artist,
                       'album': album_name,
                       'album_id': album_id,
-                      'popularity': track_popularity,
+                      'popularity': track_popularity/100,
                       'release_year': release_year,
                       'genres': genres,
                       'duration': track_duration, 
                       'lyrics': track_lyrics, 
-                      'audio_feats': track_audio_feats}
+                      }
+        for k, v in track_audio_feats.items():
+            track_data[k] = v
         return track_data
 
 
