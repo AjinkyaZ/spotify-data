@@ -108,7 +108,7 @@ python-debian==0.1.27
 python-systemd==231
 pytz==2017.3
 pyxdg==0.25
-PyYAML==3.12
+PyYAML==5.4
 pyzmq==16.0.3
 qtconsole==4.3.1
 regex==2017.4.5
