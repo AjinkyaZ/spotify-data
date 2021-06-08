@@ -82,7 +82,7 @@ pathlib==1.0.1
 pew==1.1.2
 pexpect==4.0.1
 pickleshare==0.7.4
-Pillow==3.1.2
+Pillow==8.2.0
 pipenv==9.0.3
 plac==0.9.6
 plainbox==0.25
