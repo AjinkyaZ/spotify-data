@@ -89,7 +89,7 @@ plainbox==0.25
 plyr==1.0.2
 preshed==1.0.0
 prompt-toolkit==1.0.15
-protobuf==3.5.0.post1
+protobuf==3.15.0
 psutil==5.4.3
 ptyprocess==0.5
 pyasn1==0.1.9
