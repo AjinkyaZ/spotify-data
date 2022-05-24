@@ -124,7 +124,7 @@ smart-open==1.5.4
 spacy==2.0.3
 spotipy==2.4.4
 system-service==0.3
-tensorflow==1.4.0
+tensorflow==2.6.4
 tensorflow-tensorboard==0.4.0rc3
 termcolor==1.1.0
 terminado==0.6
