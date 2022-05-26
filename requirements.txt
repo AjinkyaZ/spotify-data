@@ -138,7 +138,7 @@ tqdm==4.19.4
 traitlets==4.3.2
 ubuntu-drivers-common==0.0.0
 ufw==0.35
-ujson==1.35
+ujson==5.2.0
 unattended-upgrades==0.1
 unity-scope-calculator==0.1
 unity-scope-chromiumbookmarks==0.1
